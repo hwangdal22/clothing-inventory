@@ -23,6 +23,7 @@
   <h1>옷 재고 물류관리 프로그램</h1>
   <div id="inventory"></div>
   <script>
+  
     // 재고 데이터 불러오기 및 업데이트 함수
     function loadInventory() {
       db.collection("inventory").get().then((querySnapshot) => {
@@ -111,5 +112,9 @@
     // 페이지 로드 시 재고 데이터 불러오기
     window.onload = loadInventory;
   </script>
+</head>
+<body>
+  <h1>옷 재고 물류관리 프로그램</h1>
+  <div id="inventory"></div>
 </body>
 </html>
