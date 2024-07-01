@@ -14,7 +14,7 @@
       text-align: center;
       font-size: 24px;
     }
-    #inventory div {
+    .item {
       border: 1px solid #ddd;
       border-radius: 5px;
       padding: 10px;
@@ -27,6 +27,8 @@
       border-radius: 5px;
       border: none;
       color: white;
+      flex: 1;
+      max-width: 100px;
     }
     .decrease {
       background-color: red;
@@ -44,6 +46,16 @@
       width: calc(100% - 40px);
       box-sizing: border-box;
     }
+    .quantity {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
   </style>
   <script>
     // Firebase 설정 코드
@@ -54,6 +66,7 @@
       storageBucket: "jinatod-c24e1.appspot.com",
       messagingSenderId: "526936172583",
       appId: "1:526936172583:web:d7645bdacebfff335e4602"
+
     };
     // Firebase 초기화
     firebase.initializeApp(firebaseConfig);
@@ -61,22 +74,48 @@
 
     // 재고 데이터 불러오기 및 업데이트 함수
     function loadInventory() {
-      db.collection("inventory").get().then((querySnapshot) => {
-        const inventoryDiv = document.getElementById('inventory');
-        inventoryDiv.innerHTML = '';
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          inventoryDiv.innerHTML += `
-            <div id="${doc.id}">
-              <h3>${doc.id}</h3>
-              <p>남은 수량: <span id="${doc.id}-quantity">${data.quantity}</span></p>
-              <button class="decrease" onclick="updateQuantity('${doc.id}', -1)">-1</button>
-              <button class="increase" onclick="updateQuantity('${doc.id}', 1)">+1</button>
-              <button class="update" onclick="showUpdateForm('${doc.id}', ${data.quantity})">재고수정</button>
-              <button class="add" onclick="showAddForm('${doc.id}')">재고추가</button>
-            </div>
-          `;
+      const items = ["choo-black", "choo-white", "jina-white"];
+      const sizes = ["small", "medium", "large", "xlarge", "xxlarge"];
+      const inventoryDiv = document.getElementById('inventory');
+      inventoryDiv.innerHTML = '';
+
+      items.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item';
+        itemDiv.innerHTML = `<h2>${item}</h2>`;
+        sizes.forEach(size => {
+          db.collection("inventory").doc(`${item}-${size}`).get().then((doc) => {
+            if (doc.exists) {
+              const data = doc.data();
+              itemDiv.innerHTML += `
+                <div id="${item}-${size}">
+                  <h3>${size}</h3>
+                  <p>남은 수량: <span id="${item}-${size}-quantity" class="quantity">${data.quantity}</span></p>
+                  <div class="button-container">
+                    <button class="decrease" onclick="updateQuantity('${item}-${size}', -1)">-1</button>
+                    <button class="increase" onclick="updateQuantity('${item}-${size}', 1)">+1</button>
+                    <button class="update" onclick="showUpdateForm('${item}-${size}', ${data.quantity})">재고수정</button>
+                    <button class="add" onclick="showAddForm('${item}-${size}')">재고추가</button>
+                  </div>
+                </div>
+              `;
+            } else {
+              itemDiv.innerHTML += `
+                <div id="${item}-${size}">
+                  <h3>${size}</h3>
+                  <p>남은 수량: <span id="${item}-${size}-quantity" class="quantity">0</span></p>
+                  <div class="button-container">
+                    <button class="decrease" onclick="updateQuantity('${item}-${size}', -1)">-1</button>
+                    <button class="increase" onclick="updateQuantity('${item}-${size}', 1)">+1</button>
+                    <button class="update" onclick="showUpdateForm('${item}-${size}', 0)">재고수정</button>
+                    <button class="add" onclick="showAddForm('${item}-${size}')">재고추가</button>
+                  </div>
+                </div>
+              `;
+            }
+          });
         });
+        inventoryDiv.appendChild(itemDiv);
       });
     }
 
@@ -85,7 +124,7 @@
       const quantitySpan = document.getElementById(`${id}-quantity`);
       const newQuantity = parseInt(quantitySpan.textContent) + amount;
       if (newQuantity >= 0) {
-        db.collection("inventory").doc(id).update({ quantity: newQuantity });
+        db.collection("inventory").doc(id).set({ quantity: newQuantity });
         quantitySpan.textContent = newQuantity;
       }
     }
@@ -106,7 +145,7 @@
     function updateInventory(id) {
       const newQuantity = document.getElementById(`newQuantity-${id}`).value;
       if (newQuantity >= 0) {
-        db.collection("inventory").doc(id).update({ quantity: parseInt(newQuantity) });
+        db.collection("inventory").doc(id).set({ quantity: parseInt(newQuantity) });
         document.getElementById(`${id}-quantity`).textContent = newQuantity;
         hideForm(`updateForm-${id}`);
       }
@@ -130,7 +169,7 @@
       const quantitySpan = document.getElementById(`${id}-quantity`);
       const newQuantity = parseInt(quantitySpan.textContent) + parseInt(addQuantity);
       if (newQuantity >= 0) {
-        db.collection("inventory").doc(id).update({ quantity: newQuantity });
+        db.collection("inventory").doc(id).set({ quantity: newQuantity });
         quantitySpan.textContent = newQuantity;
         hideForm(`addForm-${id}`);
       }
