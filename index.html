@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clothing Inventory Management</title>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+  <script>
+    // Firebase 설정 코드
+    var firebaseConfig = {
+      apiKey: "AIzaSyAcX8RhucUyOe52h0dbV6yjs1OsAwEvOlg",
+      authDomain: "jinatod-c24e1.firebaseapp.com",
+      projectId: "jinatod-c24e1",
+      storageBucket: "jinatod-c24e1.appspot.com",
+      messagingSenderId: "526936172583",
+      appId: "1:526936172583:web:d7645bdacebfff335e4602"
+    };
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+  </script>
+</head>
+<body>
+  <h1>옷 재고 물류관리 프로그램</h1>
+  <div id="inventory"></div>
+  <script>
+    // 재고 데이터 불러오기 및 업데이트 함수
+    function loadInventory() {
+      db.collection("inventory").get().then((querySnapshot) => {
+        const inventoryDiv = document.getElementById('inventory');
+        inventoryDiv.innerHTML = '';
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          inventoryDiv.innerHTML += `
+            <div id="${doc.id}">
+              <h3>${doc.id}</h3>
+              <p>남은 수량: <span id="${doc.id}-quantity">${data.quantity}</span></p>
+              <button onclick="updateQuantity('${doc.id}', -1)">-1</button>
+              <button onclick="updateQuantity('${doc.id}', 1)">+1</button>
+              <button onclick="showUpdateForm('${doc.id}', ${data.quantity})">재고수정</button>
+              <button onclick="showAddForm('${doc.id}')">재고추가</button>
+            </div>
+          `;
+        });
+      });
+    }
+
+    // 수량 업데이트 함수
+    function updateQuantity(id, amount) {
+      const quantitySpan = document.getElementById(`${id}-quantity`);
+      const newQuantity = parseInt(quantitySpan.textContent) + amount;
+      if (newQuantity >= 0) {
+        db.collection("inventory").doc(id).update({ quantity: newQuantity });
+        quantitySpan.textContent = newQuantity;
+      }
+    }
+
+    // 재고수정 폼 표시 함수
+    function showUpdateForm(id, currentQuantity) {
+      const updateForm = `
+        <div id="updateForm-${id}">
+          <input type="number" id="newQuantity-${id}" value="${currentQuantity}">
+          <button onclick="updateInventory('${id}')">확인</button>
+          <button onclick="hideForm('updateForm-${id}')">취소</button>
+        </div>
+      `;
+      document.getElementById(id).insertAdjacentHTML('beforeend', updateForm);
+    }
+
+    // 재고수정 함수
+    function updateInventory(id) {
+      const newQuantity = document.getElementById(`newQuantity-${id}`).value;
+      if (newQuantity >= 0) {
+        db.collection("inventory").doc(id).update({ quantity: parseInt(newQuantity) });
+        document.getElementById(`${id}-quantity`).textContent = newQuantity;
+        hideForm(`updateForm-${id}`);
+      }
+    }
+
+    // 재고추가 폼 표시 함수
+    function showAddForm(id) {
+      const addForm = `
+        <div id="addForm-${id}">
+          <input type="number" id="addQuantity-${id}" value="0">
+          <button onclick="addInventory('${id}')">확인</button>
+          <button onclick="hideForm('addForm-${id}')">취소</button>
+        </div>
+      `;
+      document.getElementById(id).insertAdjacentHTML('beforeend', addForm);
+    }
+
+    // 재고추가 함수
+    function addInventory(id) {
+      const addQuantity = document.getElementById(`addQuantity-${id}`).value;
+      const quantitySpan = document.getElementById(`${id}-quantity`);
+      const newQuantity = parseInt(quantitySpan.textContent) + parseInt(addQuantity);
+      if (newQuantity >= 0) {
+        db.collection("inventory").doc(id).update({ quantity: newQuantity });
+        quantitySpan.textContent = newQuantity;
+        hideForm(`addForm-${id}`);
+      }
+    }
+
+    // 폼 숨기기 함수
+    function hideForm(formId) {
+      const form = document.getElementById(formId);
+      if (form) {
+        form.remove();
+      }
+    }
+
+    // 페이지 로드 시 재고 데이터 불러오기
+    window.onload = loadInventory;
+  </script>
+</body>
+</html>
