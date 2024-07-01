@@ -2,11 +2,52 @@
 <html>
 <head>
   <title>Clothing Inventory Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+    }
+    #inventory div {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+      color: white;
+    }
+    .decrease {
+      background-color: red;
+    }
+    .increase {
+      background-color: blue;
+    }
+    .update, .add {
+      background-color: #007BFF;
+    }
+    input[type="number"] {
+      font-size: 18px;
+      padding: 10px;
+      margin: 5px;
+      width: calc(100% - 40px);
+      box-sizing: border-box;
+    }
+  </style>
   <script>
     // Firebase 설정 코드
-    var firebaseConfig = {
+     var firebaseConfig = {
       apiKey: "AIzaSyAcX8RhucUyOe52h0dbV6yjs1OsAwEvOlg",
       authDomain: "jinatod-c24e1.firebaseapp.com",
       projectId: "jinatod-c24e1",
@@ -17,13 +58,7 @@
     // Firebase 초기화
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
-  </script>
-</head>
-<body>
-  <h1>옷 재고 물류관리 프로그램</h1>
-  <div id="inventory"></div>
-  <script>
-  
+
     // 재고 데이터 불러오기 및 업데이트 함수
     function loadInventory() {
       db.collection("inventory").get().then((querySnapshot) => {
@@ -35,10 +70,10 @@
             <div id="${doc.id}">
               <h3>${doc.id}</h3>
               <p>남은 수량: <span id="${doc.id}-quantity">${data.quantity}</span></p>
-              <button onclick="updateQuantity('${doc.id}', -1)">-1</button>
-              <button onclick="updateQuantity('${doc.id}', 1)">+1</button>
-              <button onclick="showUpdateForm('${doc.id}', ${data.quantity})">재고수정</button>
-              <button onclick="showAddForm('${doc.id}')">재고추가</button>
+              <button class="decrease" onclick="updateQuantity('${doc.id}', -1)">-1</button>
+              <button class="increase" onclick="updateQuantity('${doc.id}', 1)">+1</button>
+              <button class="update" onclick="showUpdateForm('${doc.id}', ${data.quantity})">재고수정</button>
+              <button class="add" onclick="showAddForm('${doc.id}')">재고추가</button>
             </div>
           `;
         });
@@ -60,8 +95,8 @@
       const updateForm = `
         <div id="updateForm-${id}">
           <input type="number" id="newQuantity-${id}" value="${currentQuantity}">
-          <button onclick="updateInventory('${id}')">확인</button>
-          <button onclick="hideForm('updateForm-${id}')">취소</button>
+          <button class="update" onclick="updateInventory('${id}')">확인</button>
+          <button class="add" onclick="hideForm('updateForm-${id}')">취소</button>
         </div>
       `;
       document.getElementById(id).insertAdjacentHTML('beforeend', updateForm);
@@ -82,8 +117,8 @@
       const addForm = `
         <div id="addForm-${id}">
           <input type="number" id="addQuantity-${id}" value="0">
-          <button onclick="addInventory('${id}')">확인</button>
-          <button onclick="hideForm('addForm-${id}')">취소</button>
+          <button class="add" onclick="addInventory('${id}')">확인</button>
+          <button class="update" onclick="hideForm('addForm-${id}')">취소</button>
         </div>
       `;
       document.getElementById(id).insertAdjacentHTML('beforeend', addForm);
